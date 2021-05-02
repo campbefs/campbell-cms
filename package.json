@@ -1,0 +1,23 @@
+{
+  "name": "campbell-cms",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/campbefs/campbell-cms.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/campbefs/campbell-cms/issues"
+  },
+  "homepage": "https://github.com/campbefs/campbell-cms#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
