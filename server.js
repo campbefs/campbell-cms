@@ -186,15 +186,14 @@ const updateEmployeeManager = (eeMgrArr) => {
           // console.log(result[0].employee_id);
           let eeNameArr = data.employeeName.split(' ');
           eeNameArr.unshift(result[0].employee_id);
-          console.log(eeNameArr);
 
           db.query(`UPDATE employee
                   SET manager_id = ?
                   where first_name = ? and last_name = ?`, eeNameArr, (err, result) => {
                     if (err) {
                       console.log(err);
-                      return promptUser();
                     }
+                    return promptUser();
                   }
           )
 
@@ -331,6 +330,12 @@ const promptUser = () => {
         return showEmployeeNames('update_role');
       } else if (data.mainMenuSelection === 'Update Employee Manager') {
         return showEmployeeNames('update_manager');
+      } else if (data.mainMenuSelection === 'Quit') {
+        console.log(`
+        ░█▀▀░█▀█░█▀█░█▀▄░█▀▄░█░█░█▀▀░█
+        ░█░█░█░█░█░█░█░█░█▀▄░░█░░█▀▀░▀
+        ░▀▀▀░▀▀▀░▀▀▀░▀▀░░▀▀░░░▀░░▀▀▀░▀
+        `);
       }
 
     })
