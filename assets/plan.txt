@@ -1,0 +1,37 @@
+npm i Inquirer - 
+
+Step 1:
+create tables with the data
+
+department
+-department_name
+-department_id
+
+roles
+-job_title
+-role_id
+-department
+-salary
+
+employees
+-employee_id
+-first_name
+-last_name
+-job_title
+-department
+-salary
+-manager
+
+Step 2: create seeds file
+
+Step 3:
+Create API routes to querying tables
+
+Step 4: 
+Create classes for collecting data 
+
+Step 5: 
+Create routes for adding employee data from the class
+
+
+Last: update employee
