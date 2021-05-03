@@ -2,6 +2,14 @@ const db = require('./db/connection');
 const inquirer = require('inquirer');
 const cTable = require('console.table');
 
+console.log(`
+██████╗ █████╗ ███╗   ███╗██████╗ ██████╗ ███████╗██╗     ██╗         ██████╗ ██████╗     ███╗   ███╗ █████╗ ███╗   ██╗ █████╗  ██████╗ ███████╗██████╗ 
+██╔════╝██╔══██╗████╗ ████║██╔══██╗██╔══██╗██╔════╝██║     ██║         ██╔══██╗██╔══██╗    ████╗ ████║██╔══██╗████╗  ██║██╔══██╗██╔════╝ ██╔════╝██╔══██╗
+██║     ███████║██╔████╔██║██████╔╝██████╔╝█████╗  ██║     ██║         ██║  ██║██████╔╝    ██╔████╔██║███████║██╔██╗ ██║███████║██║  ███╗█████╗  ██████╔╝
+██║     ██╔══██║██║╚██╔╝██║██╔═══╝ ██╔══██╗██╔══╝  ██║     ██║         ██║  ██║██╔══██╗    ██║╚██╔╝██║██╔══██║██║╚██╗██║██╔══██║██║   ██║██╔══╝  ██╔══██╗
+╚██████╗██║  ██║██║ ╚═╝ ██║██║     ██████╔╝███████╗███████╗███████╗    ██████╔╝██████╔╝    ██║ ╚═╝ ██║██║  ██║██║ ╚████║██║  ██║╚██████╔╝███████╗██║  ██║
+ ╚═════╝╚═╝  ╚═╝╚═╝     ╚═╝╚═╝     ╚═════╝ ╚══════╝╚══════╝╚══════╝    ╚═════╝ ╚═════╝     ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝  ╚═╝
+`);
 
 // Department Table
 const showDepartmentTable = () => {
@@ -74,7 +82,7 @@ const showEmployeeTable = () => {
 
 };
 
-const showManagerNames = () => {
+const showManagerNames = (action) => {
   db.query(`
   SELECT 
     CONCAT(first_name, ' ', last_name) as employeeName
@@ -91,12 +99,20 @@ const showManagerNames = () => {
     for (i=0; i < results.length; i++ ) {
       mgrArr.push(results[i].employeeName);
     }
-    return addEmployee(mgrArr);
+
+    if (action[0] === 'add_employee') {
+      return addEmployee(mgrArr);
+    } else if (action[0] === 'update_manager') {
+      // console.log(mgrArr);
+      return updateEmployeeManager([action[1], mgrArr]);
+    }
+    
+
   })
 }
 
 
-const showEmployeeNames = () => {
+const showEmployeeNames = async (action) => {
   db.query(`
   SELECT 
     CONCAT(first_name, ' ', last_name) as employeeName
@@ -111,7 +127,17 @@ const showEmployeeNames = () => {
     for (i=0; i < results.length; i++ ) {
       eeArr.push(results[i].employeeName);
     }
-    return removeEmployee(eeArr);
+
+    if (action === 'remove') {
+      return removeEmployee(eeArr);
+    } else if (action === 'update_role') {
+      return updateEmployeeRole(eeArr);
+    } else if (action === 'update_manager') {
+
+      return showManagerNames(['update_manager', eeArr])
+    
+      // return updateEmployeeManager(eeMgrArr);
+    }
   })
 }
 
@@ -131,6 +157,104 @@ const removeEmployee = (eeArr) => {
       return removeEmployeeData(data);
     })
 }
+
+const updateEmployeeManager = (eeMgrArr) => {
+  inquirer
+    .prompt([
+      {
+        type: `list`,
+        name: 'employeeName',
+        message: `What is the name of the employee you would like to update?`,
+        choices: eeMgrArr[0]
+      },
+      {
+        type: `list`,
+        name: 'mgrName',
+        message: `What is manager's name of the employee you'd like to update?`,
+        choices: eeMgrArr[1]
+      },
+
+    ]).then(data => {
+
+      let mgrNameArr = data.mgrName.split(' ');
+      db.query(`SELECT employee_id FROM employee WHERE first_name = ? and last_name = ?`,
+        mgrNameArr, (err, result) => {
+          if (err) {
+            console.log(err);
+            return;
+          }
+          // console.log(result[0].employee_id);
+          let eeNameArr = data.employeeName.split(' ');
+          eeNameArr.unshift(result[0].employee_id);
+          console.log(eeNameArr);
+
+          db.query(`UPDATE employee
+                  SET manager_id = ?
+                  where first_name = ? and last_name = ?`, eeNameArr, (err, result) => {
+                    if (err) {
+                      console.log(err);
+                      return promptUser();
+                    }
+                  }
+          )
+
+        }
+      )
+    })
+}
+
+const updateEmployeeRole = (eeArr) => {
+  inquirer
+    .prompt([
+      {
+        type: `list`,
+        name: 'employeeName',
+        message: `What is the name of the employee you would like to update?`,
+        choices: eeArr
+      },
+      {
+        type: `list`,
+        name: 'role',
+        message: `What is the employee's new role?`,
+        choices: ['Product Specialist', 'Product Operations Lead', 'Operations Manager',
+        'Software Engineer', 'Tech Lead', 'Engineering Manager',
+        'Marketing Specialist', 'Product Marketing Lead', 
+        'Marketing Manager', 'Chief Executive Officer'
+        ]
+      }
+    ])
+    .then(data => {
+      
+      role = data.role;
+      eeNewRole = data.employeeName.split(' ');
+      // console.log('role', role);
+
+      db.query(`SELECT role_id FROM role WHERE job_title = ?`, role, (err, result) => {
+        if (err) {
+          console.log(err);
+          return;
+        }
+
+        // console.log(result);
+        // console.log(result[0].role_id);
+        eeNewRole.unshift(result[0].role_id);
+        // return;
+        db.query(`UPDATE employee
+                  SET role_id = ?
+                  WHERE first_name = ? and last_name = ?
+        `, eeNewRole, (err, result) => {
+          if (err) {
+            console.log('error', err);
+            return;
+          }
+          return promptUser();
+        })
+      })
+
+    })
+}
+
+
 
 removeEmployeeData = (employeeData) => {
   eeNameArr = employeeData.employeeName.split(' ');
@@ -200,9 +324,13 @@ const promptUser = () => {
         showEmployeeTable();
         return promptUser();
       } else if (data.mainMenuSelection === 'Add Employee') {
-        return showManagerNames();
+        return showManagerNames(['add_employee'], NULL);
       } else if (data.mainMenuSelection === 'Remove Employee') {
-        return showEmployeeNames();
+        return showEmployeeNames('remove');
+      } else if (data.mainMenuSelection === 'Update Employee Role') {
+        return showEmployeeNames('update_role');
+      } else if (data.mainMenuSelection === 'Update Employee Manager') {
+        return showEmployeeNames('update_manager');
       }
 
     })
@@ -255,10 +383,10 @@ const addEmployee = (managerData) => {
         type: `list`,
         name: 'role',
         message: `What is the employee's role?`,
-        choices: ['Product Specialist', 'Product Lead', 'Operations Manager',
+        choices: ['Product Specialist', 'Product Operations Lead', 'Operations Manager',
           'Software Engineer', 'Tech Lead', 'Engineering Manager',
-          'Marketing Specialist', 'Product Marketing Manager', 
-          'Head of Marketing', 'Chief Executive Officer'
+          'Marketing Specialist', 'Product Marketing Lead', 
+          'Marketing Manager', 'Chief Executive Officer'
         ]
       },
       {
@@ -275,10 +403,6 @@ const addEmployee = (managerData) => {
     })
 }
 
-
-// showDepartmentTable();
-// showRoleTable();
-// showEmployeeTable();
 
 
 promptUser();
